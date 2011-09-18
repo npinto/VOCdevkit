@@ -30,7 +30,6 @@ if exist(cp,'file')
     fprintf('%s: loading training set\n',cls);
     load(cp,'gtids','recs');
 else
-    tic;
     gtids=textread(sprintf(VOCopts.imgsetpath,VOCopts.trainset),'%s');
     for i=1:length(gtids)
         % display progress

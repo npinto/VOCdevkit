@@ -2,11 +2,11 @@ clear VOCopts
 
 % dataset
 %
-% Note for experienced users: the VOC2008-10 test sets are subsets
-% of the VOC2010 test set. You don't need to do anything special
-% to submit results for VOC2008-10.
+% Note for experienced users: the VOC2008 test set is a subset
+% of the VOC2009 test set. You don't need to do anything special
+% to submit results for VOC2008.
 
-VOCopts.dataset='VOC2011';
+VOCopts.dataset='VOC2009';
 
 % get devkit directory with forward slashes
 devkitroot=strrep(fileparts(fileparts(mfilename('fullpath'))),'\','/');
@@ -56,15 +56,9 @@ VOCopts.seg.instrespath=[VOCopts.seg.instresdir '/%s.png'];
 VOCopts.layout.imgsetpath=[VOCopts.datadir VOCopts.dataset '/ImageSets/Layout/%s.txt'];
 VOCopts.layout.respath=[VOCopts.resdir 'Layout/%s_layout_' VOCopts.testset '.xml'];
 
-% initialize action task paths
-
-VOCopts.action.imgsetpath=[VOCopts.datadir VOCopts.dataset '/ImageSets/Action/%s.txt'];
-VOCopts.action.clsimgsetpath=[VOCopts.datadir VOCopts.dataset '/ImageSets/Action/%s_%s.txt'];
-VOCopts.action.respath=[VOCopts.resdir 'Action/%s_action_' VOCopts.testset '_%s.txt'];
-
 % initialize the VOC challenge options
 
-% classes
+% VOC2009 classes
 
 VOCopts.classes={...
     'aeroplane'
@@ -90,8 +84,6 @@ VOCopts.classes={...
 
 VOCopts.nclasses=length(VOCopts.classes);	
 
-% poses
-
 VOCopts.poses={...
     'Unspecified'
     'Left'
@@ -101,35 +93,14 @@ VOCopts.poses={...
 
 VOCopts.nposes=length(VOCopts.poses);
 
-% layout parts
-
 VOCopts.parts={...
     'head'
     'hand'
     'foot'};    
 
-VOCopts.nparts=length(VOCopts.parts);
-
 VOCopts.maxparts=[1 2 2];   % max of each of above parts
 
-% actions
-
-VOCopts.actions={...    
-    'other'             % skip this when training classifiers
-    'jumping'           % new in VOC2011
-    'phoning'
-    'playinginstrument'
-    'reading'
-    'ridingbike'
-    'ridinghorse'
-    'running'
-    'takingphoto'
-    'usingcomputer'
-    'walking'};
-
-VOCopts.nactions=length(VOCopts.actions);
-
-% overlap threshold
+VOCopts.nparts=length(VOCopts.parts);
 
 VOCopts.minoverlap=0.5;
 

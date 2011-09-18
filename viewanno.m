@@ -58,20 +58,6 @@ for i=1:length(ids)
         text(bb(1),bb(2),lbl,'color','k','backgroundcolor',ls(1),...
             'verticalalignment','top','horizontalalignment','left','fontsize',8);
         
-        if isfield(rec.objects(j),'actions')
-            albl='';
-            for k=1:VOCopts.nactions
-                if rec.objects(j).actions.(VOCopts.actions{k})
-                    if ~isempty(albl)
-                        albl=[albl '+'];
-                    end
-                    albl=[albl VOCopts.actions{k}];
-                end
-            end
-            text(bb(3),bb(4),albl,'color','k','backgroundcolor',ls(1),...
-                'verticalalignment','bottom','horizontalalignment','right','fontsize',8);
-        end
-        
         for k=1:length(rec.objects(j).part)
             bb=rec.objects(j).part(k).bbox;
             plot(bb([1 3 3 1 1]),bb([2 2 4 4 2]),[ls ':'],'linewidth',2);

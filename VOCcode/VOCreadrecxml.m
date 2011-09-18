@@ -98,14 +98,4 @@ else
     p.hasparts=false;
     p.part=[];
 end
-
-if isfield(o,'actions')
-    p.hasactions=true;
-    fn=fieldnames(o.actions);
-    for i=1:numel(fn)
-        p.actions.(fn{i})=strcmp(o.actions.(fn{i}),'1');
-    end
-else
-    p.hasactions=false;
-    p.actions=[];
-end
+    
