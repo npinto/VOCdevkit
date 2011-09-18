@@ -10,7 +10,7 @@ VOCinit;
 
 gtobjects=train(VOCopts);                               % train layout
 test(VOCopts,gtobjects);                                % test layout
-[recall,prec,ap]=VOCevallayout_pr(VOCopts,'comp7',true);   % compute and display PR    
+[recall,prec,ap]=VOCevallayout(VOCopts,'comp6',true);   % compute and display PR    
 
 % train: extract all person objects with parts
 function objects = train(VOCopts)
@@ -76,31 +76,35 @@ for i=1:length(imgids)
     bb=bb-[xmin ymin xmin ymin];
         
     % find nearest ground truth bounding box    
+    d=(bb(3)-GTBB(3,:)).^2+(bb(4)-GTBB(4,:)).^2;
+    [sd,si]=sort(d);
 
-    d=sum(bb.*bb)+sum(GTBB.*GTBB,1)-2*bb*GTBB;
-    [dmin,nn]=min(d);
-        
-    % copy layout from nearest neighbour
+    nno=gtobjects(si);
+
+    % copy layout from 3 nearest neighbours
     
-    clear l;
-    l.image=imgids{i};              % image identifier
-    l.object=num2str(objids(i));    % object identifier
-    l.confidence=num2str(-dmin);  % confidence
-    nno=gtobjects(nn);
-    for j=1:numel(nno.part)
-        l.part(j).class=nno.part(j).class;                         % part class
-        l.part(j).bndbox.xmin=num2str(nno.part(j).bbox(1)+xmin);   % bounding box
-        l.part(j).bndbox.ymin=num2str(nno.part(j).bbox(2)+ymin);
-        l.part(j).bndbox.xmax=num2str(nno.part(j).bbox(3)+xmin);
-        l.part(j).bndbox.ymax=num2str(nno.part(j).bbox(4)+ymin);
-    end        
+    for nn=1:3
+                  
+        clear l;
+        l.image=imgids{i};              % image identifier
+        l.object=num2str(objids(i));    % object identifier
+        l.confidence=num2str(-sd(nn));  % confidence
+        nno=gtobjects(si(nn));
+        for j=1:numel(nno.part)
+            l.part(j).class=nno.part(j).class;                         % part class
+            l.part(j).bndbox.xmin=num2str(nno.part(j).bbox(1)+xmin);   % bounding box
+            l.part(j).bndbox.ymin=num2str(nno.part(j).bbox(2)+ymin);
+            l.part(j).bndbox.xmax=num2str(nno.part(j).bbox(3)+xmin);
+            l.part(j).bndbox.ymax=num2str(nno.part(j).bbox(4)+ymin);
+        end        
 
-    % add layout result
-    n=n+1;
-    xml.results.layout(n)=l;
+        % add layout result
+        n=n+1;
+        xml.results.layout(n)=l;
+    end
 end
 
 % write results file
 
-fprintf('saving results\n');
-VOCwritexml(xml,sprintf(VOCopts.layout.respath,'comp7'));
+fprintf('saving results...\n');
+VOCwritexml(xml,sprintf(VOCopts.layout.respath,'comp6'));

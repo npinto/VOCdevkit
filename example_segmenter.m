@@ -13,4 +13,4 @@ addpath([cd '/VOCcode']);
 VOCinit;
 
 create_segmentations_from_detections('comp3',1);
-VOCevalseg(VOCopts,'comp5');
+VOCevalseg(VOCopts,'comp3');

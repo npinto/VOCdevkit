@@ -26,11 +26,9 @@ function detector = train(VOCopts,cls)
 % load training set
 
 cp=sprintf(VOCopts.annocachepath,VOCopts.trainset);
-if exist(cp,'file')
-    fprintf('%s: loading training set\n',cls);
+try
     load(cp,'gtids','recs');
-else
-    tic;
+catch
     gtids=textread(sprintf(VOCopts.imgsetpath,VOCopts.trainset),'%s');
     for i=1:length(gtids)
         % display progress
@@ -74,15 +72,14 @@ for i=1:length(gtids)
 
     if gt
         % extract features for image
-        fdp=sprintf(VOCopts.exfdpath,gtids{i});
-        if exist(fdp,'file')
-            % load features
-            load(fdp,'fd');
-        else
+        try
+            % try to load features
+            load(sprintf(VOCopts.exfdpath,gtids{i}),'fd');
+        catch
             % compute and save features
             I=imread(sprintf(VOCopts.imgpath,gtids{i}));
             fd=extractfd(VOCopts,I);
-            save(fdp,'fd');
+            save(sprintf(VOCopts.exfdpath,gtids{i}),'fd');
         end
         
         detector.FD(1:length(fd),end+1)=fd;
@@ -116,15 +113,14 @@ for i=1:length(ids)
         tic;
     end
     
-    fdp=sprintf(VOCopts.exfdpath,ids{i});
-    if exist(fdp,'file')
-        % load features
-        load(fdp,'fd');
-    else
+    try
+        % try to load features
+        load(sprintf(VOCopts.exfdpath,ids{i}),'fd');
+    catch
         % compute and save features
         I=imread(sprintf(VOCopts.imgpath,ids{i}));
         fd=extractfd(VOCopts,I);
-        save(fdp,'fd');
+        save(sprintf(VOCopts.exfdpath,ids{i}),'fd');
     end
 
     % compute confidence of positive classification and bounding boxes

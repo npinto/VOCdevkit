@@ -3,17 +3,13 @@ function rec = VOCreadrecxml(path)
 x=VOCreadxml(path);
 x=x.annotation;
 
-rec.folder=x.folder;
-rec.filename=x.filename;
-rec.source.database=x.source.database;
-rec.source.annotation=x.source.annotation;
-rec.source.image=x.source.image;
+rec=rmfield(x,'object');
 
-rec.size.width=str2double(x.size.width);
-rec.size.height=str2double(x.size.height);
-rec.size.depth=str2double(x.size.depth);
+rec.size.width=str2double(rec.size.width);
+rec.size.height=str2double(rec.size.height);
+rec.size.depth=str2double(rec.size.depth);
 
-rec.segmented=strcmp(x.segmented,'1');
+rec.segmented=strcmp(rec.segmented,'1');
 
 rec.imgname=[x.folder '/JPEGImages/' x.filename];
 rec.imgsize=str2double({x.size.width x.size.height x.size.depth});
@@ -98,14 +94,4 @@ else
     p.hasparts=false;
     p.part=[];
 end
-
-if isfield(o,'actions')
-    p.hasactions=true;
-    fn=fieldnames(o.actions);
-    for i=1:numel(fn)
-        p.actions.(fn{i})=strcmp(o.actions.(fn{i}),'1');
-    end
-else
-    p.hasactions=false;
-    p.actions=[];
-end
+    

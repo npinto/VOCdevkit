@@ -38,11 +38,8 @@ for clsnum = 1:VOCopts.nclasses
 end
 
 % Write out the segmentations
-
-segid=sprintf('comp%d',sscanf(id,'comp%d')+2);
-
-resultsdir = sprintf(VOCopts.seg.clsresdir,segid,VOCopts.testset);
-resultsdirinst = sprintf(VOCopts.seg.instresdir,segid,VOCopts.testset);
+resultsdir = sprintf(VOCopts.seg.clsresdir,id,VOCopts.testset);
+resultsdirinst = sprintf(VOCopts.seg.instresdir,id,VOCopts.testset);
 
 if ~exist(resultsdir,'dir')
     mkdir(resultsdir);
@@ -68,8 +65,8 @@ for j=1:numel(imgids)
     end
     imname = imgids{j};
 
-    classlabelfile = sprintf(VOCopts.seg.clsrespath,segid,VOCopts.testset,imname);
-    instlabelfile = sprintf(VOCopts.seg.instrespath,segid,VOCopts.testset,imname);
+    classlabelfile = sprintf(VOCopts.seg.clsrespath,id,VOCopts.testset,imname);
+    instlabelfile = sprintf(VOCopts.seg.instrespath,id,VOCopts.testset,imname);
 
     imgfile = sprintf(VOCopts.imgpath,imname);
     imginfo = imfinfo(imgfile);

@@ -3,10 +3,9 @@ function [rec,prec,ap] = VOCevaldet(VOCopts,id,cls,draw)
 % load test set
 
 cp=sprintf(VOCopts.annocachepath,VOCopts.testset);
-if exist(cp,'file')
-    fprintf('%s: pr: loading ground truth\n',cls);
+try
     load(cp,'gtids','recs');
-else
+catch
     [gtids,t]=textread(sprintf(VOCopts.imgsetpath,VOCopts.testset),'%s %d');
     for i=1:length(gtids)
         % display progress
@@ -21,11 +20,6 @@ else
     end
     save(cp,'gtids','recs');
 end
-
-fprintf('%s: pr: evaluating detections\n',cls);
-
-% hash image ids
-hash=VOChash_init(gtids);
         
 % extract ground truth objects
 
@@ -63,7 +57,7 @@ for d=1:nd
     end
     
     % find ground truth image
-    i=VOChash_lookup(hash,ids{d});
+    i=strmatch(ids{d},gtids,'exact');
     if isempty(i)
         error('unrecognized image "%s"',ids{d});
     elseif length(i)>1
@@ -111,7 +105,16 @@ tp=cumsum(tp);
 rec=tp/npos;
 prec=tp./(fp+tp);
 
-ap=VOCap(rec,prec);
+% compute average precision
+
+ap=0;
+for t=0:0.1:1
+    p=max(prec(rec>=t));
+    if isempty(p)
+        p=0;
+    end
+    ap=ap+p/11;
+end
 
 if draw
     % plot precision/recall

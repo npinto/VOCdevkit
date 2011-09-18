@@ -1,11 +1,11 @@
 function viewdet(id,cls,onlytp)
 
-if nargin<2
-    error(['usage: viewdet(competition,class,onlytp) e.g. viewdet(''comp3'',''car'') or ' ...
-            'viewdet(''comp3'',''car'',true) to show true positives']);
+if nargin<1
+    error(['usage: viewdet(class,onlytp) e.g. viewdet(' 39 'car' 39 ') or ' ...
+            'viewdet(' 39 'car' 39 ',true) to show true positives']);
 end
 
-if nargin<3
+if nargin<2
     onlytp=false;
 end
 
@@ -17,10 +17,9 @@ VOCinit;
 
 % load test set
 cp=sprintf(VOCopts.annocachepath,VOCopts.testset);
-if exist(cp,'file')
-    fprintf('%s: loading test set\n',cls);
+try
     load(cp,'gtids','recs');
-else
+catch
     gtids=textread(sprintf(VOCopts.imgsetpath,VOCopts.testset),'%s');
     for i=1:length(gtids)
         % display progress
