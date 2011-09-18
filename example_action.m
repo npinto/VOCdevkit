@@ -7,7 +7,7 @@ addpath([cd '/VOCcode']);
 VOCinit;
 
 % train and test classifier for each action
-for i=2:VOCopts.nactions % skip "other"
+for i=1:VOCopts.nactions
     cls=VOCopts.actions{i};
     classifier=train(VOCopts,cls);                           % train classifier
     test(VOCopts,cls,classifier);                            % test classifier

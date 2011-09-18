@@ -2,11 +2,11 @@ clear VOCopts
 
 % dataset
 %
-% Note for experienced users: the VOC2008-10 test sets are subsets
+% Note for experienced users: the VOC2008/9 test sets are subsets
 % of the VOC2010 test set. You don't need to do anything special
-% to submit results for VOC2008-10.
+% to submit results for VOC2008/9.
 
-VOCopts.dataset='VOC2011';
+VOCopts.dataset='VOC2010';
 
 % get devkit directory with forward slashes
 devkitroot=strrep(fileparts(fileparts(mfilename('fullpath'))),'\','/');
@@ -115,8 +115,6 @@ VOCopts.maxparts=[1 2 2];   % max of each of above parts
 % actions
 
 VOCopts.actions={...    
-    'other'             % skip this when training classifiers
-    'jumping'           % new in VOC2011
     'phoning'
     'playinginstrument'
     'reading'
