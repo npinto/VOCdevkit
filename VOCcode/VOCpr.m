@@ -1,19 +1,4 @@
-function viewdet(id,cls,onlytp)
-
-if nargin<1
-    error(['usage: viewanno(class,onlytp) e.g. viewanno(' 39 'car' 39 ') or ' ...
-            'viewanno(' 39 'car' 39 ',true) to show true positives']);
-end
-
-if nargin<2
-    onlytp=false;
-end
-
-% change this path if you install the VOC code elsewhere
-addpath([cd '/VOCcode']);
-
-% initialize VOC options
-VOCinit;
+function [rec,prec,ap] = VOCpr(VOCopts,id,cls,draw)
 
 % load test set
 [gtids,t]=textread(sprintf(VOCopts.imgsetpath,VOCopts.testset),'%s %d');
@@ -24,7 +9,7 @@ npos=0;
 for i=1:length(gtids)
     % display progress
     if toc>1
-        fprintf('%s: viewdet: load: %d/%d\n',cls,i,length(gtids));
+        fprintf('%s: pr: load: %d/%d\n',cls,i,length(gtids));
         drawnow;
         tic;
     end
@@ -49,13 +34,15 @@ BB=[b1 b2 b3 b4]';
 ids=ids(si);
 BB=BB(:,si);
 
-% view detections
+% assign detections to ground truth objects
 nd=length(confidence);
+tp=zeros(nd,1);
+fp=zeros(nd,1);
 tic;
 for d=1:nd
     % display progress
-    if onlytp&toc>1
-        fprintf('%s: viewdet: find true pos: %d/%d\n',cls,i,length(gtids));
+    if toc>1
+        fprintf('%s: pr: compute: %d/%d\n',cls,d,nd);
         drawnow;
         tic;
     end
@@ -88,31 +75,43 @@ for d=1:nd
             end
         end
     end
-
-    % skip false positives
-    if onlytp&ovmax<VOCopts.minoverlap
-        continue
-    end
-    
-    % read image
-    I=imread(sprintf(VOCopts.imgpath,gtids{i}));
-
-    % draw detection bounding box and ground truth bounding box (if any)
-    imagesc(I);
-    hold on;
+    % assign detection as true positive/don't care/false positive
     if ovmax>=VOCopts.minoverlap
-        bbgt=gt(i).BB(:,jmax);
-        plot(bbgt([1 3 3 1 1]),bbgt([2 2 4 4 2]),'y-','linewidth',2);
-        plot(bb([1 3 3 1 1]),bb([2 2 4 4 2]),'g:','linewidth',2);
+        if ~gt(i).det(jmax)
+            if ~gt(i).diff(jmax)
+                tp(d)=1;            % true positive
+            end
+            gt(i).det(jmax)=true;
+        else
+            fp(d)=1;                % false positive (multiple detection)
+        end
     else
-        plot(bb([1 3 3 1 1]),bb([2 2 4 4 2]),'r-','linewidth',2);
-    end    
-    hold off;
-    axis image;
-    axis off;
-    title(sprintf('det %d/%d: image: "%s" (green=true pos,red=false pos,yellow=ground truth',...
-            d,nd,gtids{i}));
-    
-    fprintf('press any key to continue with next image\n');
-    pause;
+        fp(d)=1;                    % false positive
+    end
+end
+
+% compute precision/recall
+fp=cumsum(fp);
+tp=cumsum(tp);
+rec=tp/npos;
+prec=tp./(fp+tp);
+
+% compute average precision
+
+ap=0;
+for t=0:0.1:1
+    p=max(prec(rec>=t));
+    if isempty(p)
+        p=0;
+    end
+    ap=ap+p/11;
+end
+
+if draw
+    % plot precision/recall
+    plot(rec,prec,'-');
+    grid;
+    xlabel 'recall'
+    ylabel 'precision'
+    title(sprintf('class: %s, subset: %s, AP = %.3f',cls,VOCopts.testset,ap));
 end

@@ -9,13 +9,12 @@ VOCinit;
 % train and test classifier for each class
 for i=1:VOCopts.nclasses
     cls=VOCopts.classes{i};
-    classifier=train(VOCopts,cls);                           % train classifier
-    test(VOCopts,cls,classifier);                            % test classifier
-    [recall,prec,ap]=VOCevalcls(VOCopts,'comp1',cls,true);   % compute and display PR
+    classifier=train(VOCopts,cls);                  % train classifier
+    test(VOCopts,cls,classifier);                   % test classifier
+    [fp,tp,auc]=VOCroc(VOCopts,'comp1',cls,true);   % compute and display ROC
     
     if i<VOCopts.nclasses
         fprintf('press any key to continue with next class...\n');
-        drawnow;
         pause;
     end
 end
@@ -23,8 +22,8 @@ end
 % train classifier
 function classifier = train(VOCopts,cls)
 
-% load training set for class
-[ids,classifier.gt]=textread(sprintf(VOCopts.clsimgsetpath,cls,VOCopts.trainset),'%s %d');
+% load 'train' image set for class
+[ids,classifier.gt]=textread(sprintf(VOCopts.clsimgsetpath,cls,'train'),'%s %d');
 
 % extract features for each image
 classifier.FD=zeros(0,length(ids));
@@ -37,15 +36,14 @@ for i=1:length(ids)
         tic;
     end
 
-    fdp=sprintf(VOCopts.exfdpath,ids{i});
-	if exist(fdp,'file')
-        % load features
-        load(fdp,'fd');
-    else
+    try
+        % try to load features
+        load(sprintf(VOCopts.exfdpath,ids{i}),'fd');
+    catch
         % compute and save features
         I=imread(sprintf(VOCopts.imgpath,ids{i}));
         fd=extractfd(VOCopts,I);
-        save(fdp,'fd');
+        save(sprintf(VOCopts.exfdpath,ids{i}),'fd');
     end
     
     classifier.FD(1:length(fd),i)=fd;
@@ -55,7 +53,7 @@ end
 function test(VOCopts,cls,classifier)
 
 % load test set ('val' for development kit)
-[ids,gt]=textread(sprintf(VOCopts.imgsetpath,VOCopts.testset),'%s %d');
+[ids,gt]=textread(sprintf(VOCopts.clsimgsetpath,cls,VOCopts.testset),'%s %d');
 
 % create results file
 fid=fopen(sprintf(VOCopts.clsrespath,'comp1',cls),'w');
@@ -70,15 +68,14 @@ for i=1:length(ids)
         tic;
     end
     
-    fdp=sprintf(VOCopts.exfdpath,ids{i});
-    if exist(fdp,'file')
-        % load features
-        load(fdp,'fd');
-    else
+    try
+        % try to load features
+        load(sprintf(VOCopts.exfdpath,ids{i}),'fd');
+    catch
         % compute and save features
         I=imread(sprintf(VOCopts.imgpath,ids{i}));
         fd=extractfd(VOCopts,I);
-        save(fdp,'fd');
+        save(sprintf(VOCopts.exfdpath,ids{i}),'fd');
     end
 
     % compute confidence of positive classification

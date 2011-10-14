@@ -9,13 +9,12 @@ VOCinit;
 % train and test detector for each class
 for i=1:VOCopts.nclasses
     cls=VOCopts.classes{i};
-    detector=train(VOCopts,cls);                            % train detector
-    test(VOCopts,cls,detector);                             % test detector
-    [recall,prec,ap]=VOCevaldet(VOCopts,'comp3',cls,true);  % compute and display PR
+    detector=train(VOCopts,cls);                      % train detector
+    test(VOCopts,cls,detector);                       % test detector
+    [recall,prec,ap]=VOCpr(VOCopts,'comp3',cls,true); % compute and display PR
     
     if i<VOCopts.nclasses
         fprintf('press any key to continue with next class...\n');
-        drawnow;
         pause;
     end
 end
@@ -23,45 +22,28 @@ end
 % train detector
 function detector = train(VOCopts,cls)
 
-% load training set
-
-cp=sprintf(VOCopts.annocachepath,VOCopts.trainset);
-if exist(cp,'file')
-    fprintf('%s: loading training set\n',cls);
-    load(cp,'gtids','recs');
-else
-    tic;
-    gtids=textread(sprintf(VOCopts.imgsetpath,VOCopts.trainset),'%s');
-    for i=1:length(gtids)
-        % display progress
-        if toc>1
-            fprintf('%s: load: %d/%d\n',cls,i,length(gtids));
-            drawnow;
-            tic;
-        end
-
-        % read annotation
-        recs(i)=PASreadrecord(sprintf(VOCopts.annopath,gtids{i}));
-    end
-    save(cp,'gtids','recs');
-end
+% load 'train' image set
+ids=textread(sprintf(VOCopts.imgsetpath,'train'),'%s');
 
 % extract features and bounding boxes
 detector.FD=[];
 detector.bbox={};
 detector.gt=[];
 tic;
-for i=1:length(gtids)
+for i=1:length(ids)
     % display progress
     if toc>1
-        fprintf('%s: train: %d/%d\n',cls,i,length(gtids));
+        fprintf('%s: train: %d/%d\n',cls,i,length(ids));
         drawnow;
         tic;
     end
     
+    % read annotation
+    rec=PASreadrecord(sprintf(VOCopts.annopath,ids{i}));
+    
     % find objects of class and extract difficult flags for these objects
-    clsinds=strmatch(cls,{recs(i).objects(:).class},'exact');
-    diff=[recs(i).objects(clsinds).difficult];
+    clsinds=strmatch(cls,{rec.objects(:).class},'exact');
+    diff=[rec.objects(clsinds).difficult];
     
     % assign ground truth class to image
     if isempty(clsinds)
@@ -74,22 +56,21 @@ for i=1:length(gtids)
 
     if gt
         % extract features for image
-        fdp=sprintf(VOCopts.exfdpath,gtids{i});
-        if exist(fdp,'file')
-            % load features
-            load(fdp,'fd');
-        else
+        try
+            % try to load features
+            load(sprintf(VOCopts.exfdpath,ids{i}),'fd');
+        catch
             % compute and save features
-            I=imread(sprintf(VOCopts.imgpath,gtids{i}));
+            I=imread(sprintf(VOCopts.imgpath,ids{i}));
             fd=extractfd(VOCopts,I);
-            save(fdp,'fd');
+            save(sprintf(VOCopts.exfdpath,ids{i}),'fd');
         end
         
         detector.FD(1:length(fd),end+1)=fd;
         
         % extract bounding boxes for non-difficult objects
         
-        detector.bbox{end+1}=cat(1,recs(i).objects(clsinds(~diff)).bbox)';
+        detector.bbox{end+1}=cat(1,rec.objects(clsinds(~diff)).bbox)';
 
         % mark image as positive or negative
         
@@ -101,7 +82,7 @@ end
 function out = test(VOCopts,cls,detector)
 
 % load test set ('val' for development kit)
-[ids,gt]=textread(sprintf(VOCopts.imgsetpath,VOCopts.testset),'%s %d');
+[ids,gt]=textread(sprintf(VOCopts.clsimgsetpath,cls,VOCopts.testset),'%s %d');
 
 % create results file
 fid=fopen(sprintf(VOCopts.detrespath,'comp3',cls),'w');
@@ -116,15 +97,14 @@ for i=1:length(ids)
         tic;
     end
     
-    fdp=sprintf(VOCopts.exfdpath,ids{i});
-    if exist(fdp,'file')
-        % load features
-        load(fdp,'fd');
-    else
+    try
+        % try to load features
+        load(sprintf(VOCopts.exfdpath,ids{i}),'fd');
+    catch
         % compute and save features
         I=imread(sprintf(VOCopts.imgpath,ids{i}));
         fd=extractfd(VOCopts,I);
-        save(fdp,'fd');
+        save(sprintf(VOCopts.exfdpath,ids{i}),'fd');
     end
 
     % compute confidence of positive classification and bounding boxes
@@ -132,7 +112,7 @@ for i=1:length(ids)
 
     % write to results file
     for j=1:length(c)
-        fprintf(fid,'%s %f %f %f %f %f\n',ids{i},c(j),BB(:,j));
+        fprintf(fid,'%s %f %d %d %d %d\n',ids{i},c(j),BB(:,j));
     end
 end
 
